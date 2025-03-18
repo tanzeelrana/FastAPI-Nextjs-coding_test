@@ -83,7 +83,7 @@ Ensure you have the following installed:
    - Jobs are created with an initial status of `pending`.
    - A background task updates the job status in sequence with delays.
 3. **Database Choice:**
-   - SQLite was used for simplicity and ease of setup.
+   - SQLite was used for simplicity and ease of setup. (also was a requirement)
 4. **Error Handling:**
    - API validates input and returns appropriate error messages.
    - Frontend handles API failures gracefully.
@@ -92,21 +92,16 @@ Ensure you have the following installed:
 
 ## Assumptions & Trade-offs
 - **Assumption:** The job processing is simulated with delays instead of actual media processing.
-- **Trade-off:** Used SQLite instead of PostgreSQL or MySQL for simplicity.
+- **Trade-off:** Used SQLite instead of PostgreSQL or MySQL for simplicity. (also was a requirement)
 - **Limitation:** The current implementation does not persist logs or retries failed jobs.
 
 ---
 
-## Future Improvements
+## Future Improvements (recommendation for test task)
 - Implement WebSockets for real-time job status updates.
 - Add authentication and user-based job tracking.
 - Enhance UI with filtering and sorting options.
 - Improve error handling with more descriptive messages.
 
 ---
-
-## Submission
-Once ready, push your code to a GitHub repository and share the link.
-
-Happy coding! 🚀
 
