@@ -5,26 +5,48 @@ import { fetchJobs, createJob, updateJobStatus } from "@/services/api";
 export default function Page() {
   const [jobs, setJobs] = useState([]);
   const [assetId, setAssetId] = useState("");
+  const [error, setError] = useState(null);
+
+  const loadJobs = async () => {
+    try {
+      const res = await fetchJobs();
+      setJobs(res.data);
+    } catch (err) {
+      setError("Failed to load jobs. Please try again later.");
+    }
+  };
 
   useEffect(() => {
-    fetchJobs().then((res) => setJobs(res.data));
+    loadJobs();
   }, []);
 
   const handleCreateJob = async () => {
     if (!assetId.trim()) return;
-    await createJob(assetId);
-    setAssetId("");
-    fetchJobs().then((res) => setJobs(res.data));
+    try {
+      await createJob(assetId);
+      setAssetId("");
+      await loadJobs();
+    } catch (err) {
+      setError("Failed to create job. Please try again.");
+    }
   };
 
   const handleUpdateStatus = async (id, status) => {
-    await updateJobStatus(id, status);
-    fetchJobs().then((res) => setJobs(res.data));
+    try {
+      await updateJobStatus(id, status);
+      await loadJobs();
+    } catch (err) {
+      setError(`Failed to update job status to "${status}".`);
+    }
   };
 
   return (
     <div className="container mx-auto p-6">
       <h1 className="text-3xl font-bold mb-6">Job Dashboard</h1>
+
+      {error && (
+        <div className="mb-4 p-2 bg-red-200 text-red-800 rounded">{error}</div>
+      )}
 
       {/* Job Creation Form */}
       <div className="mb-6 flex gap-2">
