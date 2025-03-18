@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Depends, HTTPException, BackgroundTasks
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from database import SessionLocal, engine
 from models import Base, Job
@@ -7,6 +8,15 @@ from crud import create_job, get_jobs, get_job, update_job_status
 import time
 
 app = FastAPI()
+
+# Enable CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow frontend to connect (for development, use "*" or specific domains)
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all HTTP methods (GET, POST, PUT, etc.)
+    allow_headers=["*"],  # Allow all headers
+)
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
