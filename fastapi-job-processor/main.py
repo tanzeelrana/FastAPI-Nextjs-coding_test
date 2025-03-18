@@ -6,6 +6,7 @@ from models import Base, Job
 from schemas import JobCreate, JobResponse
 from crud import create_job, get_jobs, get_job, update_job_status
 import time
+import  crud, schemas
 
 app = FastAPI()
 
@@ -61,9 +62,9 @@ async def get_job_endpoint(job_id: int, db: Session = Depends(get_db)):
     return job
 
 # Update Job Status
-@app.put("/jobs/{job_id}/status", response_model=JobResponse)
-async def update_job_status_endpoint(job_id: int, status: str, db: Session = Depends(get_db)):
-    job = update_job_status(db, job_id, status)
-    if not job:
+@app.put("/jobs/{job_id}/status")
+def update_job_status(job_id: int, status_update: schemas.JobStatusUpdate, db: Session = Depends(get_db)):
+    job = crud.update_job_status(db, job_id, status_update.status)
+    if job is None:
         raise HTTPException(status_code=404, detail="Job not found")
-    return job
+    return {"message": "Job status updated successfully", "status": job.status}

@@ -13,3 +13,6 @@ class JobResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class JobStatusUpdate(BaseModel):
+    status: str

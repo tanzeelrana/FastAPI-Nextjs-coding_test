@@ -13,3 +13,4 @@ export const createJob = async (assetId) => {
 export const updateJobStatus = async (jobId, status) => {
   return await axios.put(`${API_URL}/jobs/${jobId}/status`, { status });
 };
+
