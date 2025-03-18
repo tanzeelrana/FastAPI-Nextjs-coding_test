@@ -1,29 +1,17 @@
-from fastapi import FastAPI, HTTPException, BackgroundTasks, Depends
-from sqlalchemy import Column, Integer, String, DateTime, Enum, create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
-from datetime import datetime
+from fastapi import FastAPI, Depends, HTTPException, BackgroundTasks
+from sqlalchemy.orm import Session
+from database import SessionLocal, engine
+from models import Base, Job
+from schemas import JobCreate, JobResponse
+from crud import create_job, get_jobs, get_job, update_job_status
 import time
 
-# FastAPI App
 app = FastAPI()
 
-# Database Setup
-SQLALCHEMY_DATABASE_URL = "sqlite:///./jobs.db"
-engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base = declarative_base()
-
-class Job(Base):
-    __tablename__ = "jobs"
-    id = Column(Integer, primary_key=True, index=True)
-    asset_id = Column(String, nullable=False)
-    status = Column(Enum("pending", "processing", "completed", "failed", name="status_enum"), default="pending")
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
+# Create database tables
 Base.metadata.create_all(bind=engine)
 
+# Dependency to get DB session
 def get_db():
     db = SessionLocal()
     try:
@@ -31,36 +19,7 @@ def get_db():
     finally:
         db.close()
 
-# Routes
-@app.post("/jobs")
-async def create_job(asset_id: str, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
-    job = Job(asset_id=asset_id, status="pending")
-    db.add(job)
-    db.commit()
-    db.refresh(job)
-    background_tasks.add_task(process_job, job.id, db)
-    return job
-
-@app.get("/jobs")
-async def get_jobs(db: Session = Depends(get_db)):
-    return db.query(Job).all()
-
-@app.get("/jobs/{job_id}")
-async def get_job(job_id: int, db: Session = Depends(get_db)):
-    job = db.query(Job).filter(Job.id == job_id).first()
-    if not job:
-        raise HTTPException(status_code=404, detail="Job not found")
-    return job
-
-@app.put("/jobs/{job_id}/status")
-async def update_job_status(job_id: int, status: str, db: Session = Depends(get_db)):
-    job = db.query(Job).filter(Job.id == job_id).first()
-    if not job:
-        raise HTTPException(status_code=404, detail="Job not found")
-    job.status = status
-    db.commit()
-    return job
-
+# Simulated background job processing
 def process_job(job_id: int, db: Session):
     time.sleep(3)
     job = db.query(Job).filter(Job.id == job_id).first()
@@ -70,3 +29,31 @@ def process_job(job_id: int, db: Session):
         time.sleep(3)
         job.status = "completed"
         db.commit()
+
+# Create Job
+@app.post("/jobs", response_model=JobResponse)
+async def create_job_endpoint(job_data: JobCreate, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+    job = create_job(db, job_data.asset_id)
+    background_tasks.add_task(process_job, job.id, db)
+    return job
+
+# Get all Jobs
+@app.get("/jobs", response_model=list[JobResponse])
+async def get_jobs_endpoint(db: Session = Depends(get_db)):
+    return get_jobs(db)
+
+# Get Job by ID
+@app.get("/jobs/{job_id}", response_model=JobResponse)
+async def get_job_endpoint(job_id: int, db: Session = Depends(get_db)):
+    job = get_job(db, job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    return job
+
+# Update Job Status
+@app.put("/jobs/{job_id}/status", response_model=JobResponse)
+async def update_job_status_endpoint(job_id: int, status: str, db: Session = Depends(get_db)):
+    job = update_job_status(db, job_id, status)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    return job
