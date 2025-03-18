@@ -23,11 +23,18 @@
 
 ---
 
+## Development Environment
+Ensure you have the following installed:
+- Python 3.13.1
+- Node.js v21.6.1
+- OS : Mac
+- IDE : Visual studio code
+
 ## Setup Instructions
 ### Prerequisites
 Ensure you have the following installed:
-- Python 3.8+
-- Node.js 16+
+- Python 3.13.1
+- Node.js v21.6.1
 
 ### Backend Setup (FastAPI)
 1. Clone the repository:
